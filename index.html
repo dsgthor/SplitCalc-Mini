@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SplitCalc - Split Expenses Easily</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNhh/TCPMZ5/12797iuTWJlrm+a4DCb3Wz6hLqhLCKPgwkmBz2PIjn6g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .pulse-error { animation: pulse 0.5s ease-in-out; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto max-w-6xl p-4">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-600 mb-2">🧾 SplitCalc</h1>
+            <p class="text-gray-600">Split expenses fairly with your group</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column -->
+            <div class="space-y-6">
+                <!-- Members Panel -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">👥 Group Members</h2>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="memberInput" placeholder="Enter member name" 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="addMember()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                            Add
+                        </button>
+                    </div>
+                    <div id="membersList" class="space-y-2"></div>
+                </div>
+
+                <!-- Add Expense Panel -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">➕ Add Expense</h2>
+                    <form onsubmit="addExpense(event)" class="space-y-4">
+                        <input type="text" id="expenseTitle" placeholder="Expense title (e.g., Dinner)" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        
+                        <input type="number" id="expenseAmount" placeholder="Amount" step="0.01" min="0" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        
+                        <select id="expensePaidBy" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Who paid?</option>
+                        </select>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Shared with:</label>
+                            <div class="mb-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="selectAllShared" onchange="toggleSelectAll()" 
+                                           class="mr-2 text-blue-500 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-blue-600">Select All</span>
+                                </label>
+                            </div>
+                            <div id="sharedWithList" class="space-y-2 max-h-32 overflow-y-auto border-t pt-2"></div>
+                        </div>
+                        
+                        <button type="submit" class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+                            Add Expense
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+                <!-- Balance Panel -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">📊 Who Owes What</h2>
+                    <div id="balancesList" class="space-y-2"></div>
+                </div>
+
+                <!-- Expense History -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">📜 Expense History</h2>
+                    <div id="expenseHistory" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                </div>
+
+                <!-- Export & Actions -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">💾 Export & Import</h2>
+                    <div class="space-y-3">
+                        <button onclick="exportData()" class="w-full px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors">
+                            📥 Export as JSON
+                        </button>
+                        <button onclick="exportPDF()" class="w-full px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors">
+                            📄 Export as PDF
+                        </button>
+                        <div class="border-t pt-3">
+                            <input type="file" id="importFile" accept=".json" onchange="importData()" class="hidden">
+                            <button onclick="document.getElementById('importFile').click()" class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+                                📂 Import JSON
+                            </button>
+                        </div>
+                        <div class="border-t pt-3">
+                            <button onclick="clearAllData()" class="w-full px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
+                                🗑️ Clear All Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global app state
+        let appData = {
+            members: [],
+            expenses: []
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            updateUI();
+            
+            // Add enter key support for member input
+            document.getElementById('memberInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addMember();
+                }
+            });
+        });
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('splitcalc-data');
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                    // Ensure arrays exist
+                    if (!appData.members) appData.members = [];
+                    if (!appData.expenses) appData.expenses = [];
+                } catch (e) {
+                    console.error('Error loading data:', e);
+                    appData = { members: [], expenses: [] };
+                }
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('splitcalc-data', JSON.stringify(appData));
+        }
+
+        // Toggle select all shared members
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAllShared');
+            const memberCheckboxes = document.querySelectorAll('#sharedWithList input[type="checkbox"]');
+            
+            memberCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        }
+
+        // Update select all checkbox state based on individual selections
+        function updateSelectAllState() {
+            const selectAllCheckbox = document.getElementById('selectAllShared');
+            const memberCheckboxes = document.querySelectorAll('#sharedWithList input[type="checkbox"]');
+            const checkedBoxes = document.querySelectorAll('#sharedWithList input[type="checkbox"]:checked');
+            
+            if (memberCheckboxes.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (checkedBoxes.length === memberCheckboxes.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else if (checkedBoxes.length > 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+        }
+        function addMember() {
+            const input = document.getElementById('memberInput');
+            const name = input.value.trim();
+            
+            if (!name) {
+                showError(input, 'Please enter a name');
+                return;
+            }
+            
+            if (appData.members.includes(name)) {
+                showError(input, 'Member already exists');
+                return;
+            }
+            
+            appData.members.push(name);
+            input.value = '';
+            saveData();
+            updateUI();
+        }
+
+        // Remove a member
+        function removeMember(name) {
+            if (confirm(`Remove ${name} from the group? This will also remove their expenses.`)) {
+                appData.members = appData.members.filter(m => m !== name);
+                appData.expenses = appData.expenses.filter(e => e.paidBy !== name && !e.sharedWith.includes(name));
+                saveData();
+                updateUI();
+            }
+        }
+
+        // Add a new expense
+        function addExpense(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('expenseTitle').value.trim();
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const paidBy = document.getElementById('expensePaidBy').value;
+            
+            // Get selected shared members
+            const sharedCheckboxes = document.querySelectorAll('#sharedWithList input[type="checkbox"]:checked');
+            const sharedWith = Array.from(sharedCheckboxes).map(cb => cb.value);
+            
+            // Validation
+            if (!title) {
+                showError(document.getElementById('expenseTitle'), 'Please enter a title');
+                return;
+            }
+            
+            if (isNaN(amount) || amount <= 0) {
+                showError(document.getElementById('expenseAmount'), 'Please enter a valid amount');
+                return;
+            }
+            
+            if (!paidBy) {
+                showError(document.getElementById('expensePaidBy'), 'Please select who paid');
+                return;
+            }
+            
+            if (sharedWith.length === 0) {
+                alert('Please select who shared this expense');
+                return;
+            }
+            
+            // Create expense object
+            const expense = {
+                id: Date.now(),
+                title: title,
+                amount: amount,
+                paidBy: paidBy,
+                sharedWith: sharedWith,
+                date: new Date().toISOString()
+            };
+            
+            appData.expenses.push(expense);
+            
+            // Clear form
+            document.getElementById('expenseTitle').value = '';
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expensePaidBy').value = '';
+            document.querySelectorAll('#sharedWithList input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('selectAllShared').checked = false;
+            document.getElementById('selectAllShared').indeterminate = false;
+            
+            saveData();
+            updateUI();
+        }
+
+        // Remove an expense
+        function removeExpense(id) {
+            if (confirm('Remove this expense?')) {
+                appData.expenses = appData.expenses.filter(e => e.id !== id);
+                saveData();
+                updateUI();
+            }
+        }
+
+        // Calculate balances
+        function calculateBalances() {
+            const balances = {};
+            
+            // Initialize balances
+            appData.members.forEach(member => {
+                balances[member] = 0;
+            });
+            
+            // Process each expense
+            appData.expenses.forEach(expense => {
+                const shareAmount = expense.amount / expense.sharedWith.length;
+                
+                // Person who paid gets credit
+                balances[expense.paidBy] += expense.amount;
+                
+                // Everyone who shared owes their share
+                expense.sharedWith.forEach(person => {
+                    balances[person] -= shareAmount;
+                });
+            });
+            
+            return balances;
+        }
+
+        // Generate who owes whom
+        function generateDebts() {
+            const balances = calculateBalances();
+            const debts = [];
+            
+            // Separate creditors and debtors
+            const creditors = [];
+            const debtors = [];
+            
+            Object.entries(balances).forEach(([person, balance]) => {
+                if (balance > 0.01) {
+                    creditors.push({ person, amount: balance });
+                } else if (balance < -0.01) {
+                    debtors.push({ person, amount: Math.abs(balance) });
+                }
+            });
+            
+            // Sort by amount (largest first)
+            creditors.sort((a, b) => b.amount - a.amount);
+            debtors.sort((a, b) => b.amount - a.amount);
+            
+            // Match debts
+            let i = 0, j = 0;
+            while (i < creditors.length && j < debtors.length) {
+                const creditor = creditors[i];
+                const debtor = debtors[j];
+                
+                const amount = Math.min(creditor.amount, debtor.amount);
+                
+                if (amount > 0.01) {
+                    debts.push({
+                        from: debtor.person,
+                        to: creditor.person,
+                        amount: amount
+                    });
+                }
+                
+                creditor.amount -= amount;
+                debtor.amount -= amount;
+                
+                if (creditor.amount < 0.01) i++;
+                if (debtor.amount < 0.01) j++;
+            }
+            
+            return debts;
+        }
+
+        // Update entire UI
+        function updateUI() {
+            updateMembersList();
+            updateExpenseForm();
+            updateExpenseHistory();
+            updateBalances();
+        }
+
+        // Update members list
+        function updateMembersList() {
+            const container = document.getElementById('membersList');
+            container.innerHTML = '';
+            
+            if (appData.members.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">No members added yet</p>';
+                return;
+            }
+            
+            appData.members.forEach(member => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-md fade-in';
+                div.innerHTML = `
+                    <span class="font-medium">${escapeHtml(member)}</span>
+                    <button onclick="removeMember('${escapeHtml(member)}')" 
+                            class="text-red-500 hover:text-red-700 text-sm">Remove</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Update expense form dropdowns
+        function updateExpenseForm() {
+            const paidBySelect = document.getElementById('expensePaidBy');
+            const sharedWithContainer = document.getElementById('sharedWithList');
+            
+            // Update "paid by" dropdown
+            paidBySelect.innerHTML = '<option value="">Who paid?</option>';
+            appData.members.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member;
+                option.textContent = member;
+                paidBySelect.appendChild(option);
+            });
+            
+            // Update "shared with" checkboxes
+            sharedWithContainer.innerHTML = '';
+            if (appData.members.length === 0) {
+                sharedWithContainer.innerHTML = '<p class="text-gray-500 text-sm">Add members first</p>';
+            } else {
+                appData.members.forEach(member => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center';
+                    div.innerHTML = `
+                        <input type="checkbox" id="shared-${escapeHtml(member)}" value="${escapeHtml(member)}" 
+                               onchange="updateSelectAllState()"
+                               class="mr-2 text-blue-500 focus:ring-blue-500">
+                        <label for="shared-${escapeHtml(member)}" class="text-sm">${escapeHtml(member)}</label>
+                    `;
+                    sharedWithContainer.appendChild(div);
+                });
+                updateSelectAllState();
+            }
+        }
+
+        // Update expense history
+        function updateExpenseHistory() {
+            const container = document.getElementById('expenseHistory');
+            container.innerHTML = '';
+            
+            if (appData.expenses.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">No expenses recorded yet</p>';
+                return;
+            }
+            
+            // Sort expenses by date (newest first)
+            const sortedExpenses = [...appData.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedExpenses.forEach(expense => {
+                const div = document.createElement('div');
+                div.className = 'border border-gray-200 rounded-md p-3 fade-in';
+                
+                const date = new Date(expense.date).toLocaleDateString();
+                const shareAmount = (expense.amount / expense.sharedWith.length).toFixed(2);
+                
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-medium text-gray-800">${escapeHtml(expense.title)}</h3>
+                        <button onclick="removeExpense(${expense.id})" 
+                                class="text-red-500 hover:text-red-700 text-xs">×</button>
+                    </div>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <div>Amount: <span class="font-medium">₹${expense.amount.toFixed(2)}</span></div>
+                        <div>Paid by: <span class="font-medium">${escapeHtml(expense.paidBy)}</span></div>
+                        <div>Shared with: ${expense.sharedWith.map(p => escapeHtml(p)).join(', ')}</div>
+                        <div>Per person: ₹${shareAmount}</div>
+                        <div class="text-xs text-gray-400">${date}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Update balances display
+        function updateBalances() {
+            const container = document.getElementById('balancesList');
+            container.innerHTML = '';
+            
+            if (appData.expenses.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">Add expenses to see balances</p>';
+                return;
+            }
+            
+            const debts = generateDebts();
+            
+            if (debts.length === 0) {
+                container.innerHTML = '<p class="text-green-600 text-center py-4 font-medium">✅ Everyone is settled up!</p>';
+                return;
+            }
+            
+            debts.forEach(debt => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-3 bg-yellow-50 border border-yellow-200 rounded-md fade-in';
+                div.innerHTML = `
+                    <span><strong>${escapeHtml(debt.from)}</strong> owes <strong>${escapeHtml(debt.to)}</strong></span>
+                    <span class="font-bold text-green-600">₹${debt.amount.toFixed(2)}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Export data as PDF with detailed calculations
+        function exportPDF() {
+            // Check if jsPDF is loaded
+            if (typeof window.jsPDF === 'undefined') {
+                // Try alternative access method
+                const jsPDF = window.jspdf?.jsPDF;
+                if (!jsPDF) {
+                    alert('PDF export library is loading. Please wait a moment and try again.');
+                    return;
+                }
+                window.jsPDF = jsPDF;
+            }
+
+            try {
+                const { jsPDF } = window.jsPDF;
+                const doc = new jsPDF();
+                
+                let yPosition = 20;
+                const pageHeight = doc.internal.pageSize.height;
+                const margin = 20;
+                
+                // Helper function to add new page if needed
+                function checkPageBreak(neededSpace = 20) {
+                    if (yPosition + neededSpace > pageHeight - margin) {
+                        doc.addPage();
+                        yPosition = 20;
+                    }
+                }
+                
+                // Title
+                doc.setFontSize(20);
+                doc.setFont(undefined, 'bold');
+                doc.text('SplitCalc - Expense Report', margin, yPosition);
+                yPosition += 15;
+                
+                // Date
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, margin, yPosition);
+                yPosition += 20;
+                
+                // Group Members
+                checkPageBreak(30);
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text('Group Members:', margin, yPosition);
+                yPosition += 10;
+                
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                if (appData.members.length === 0) {
+                    doc.text('No members added', margin + 5, yPosition);
+                    yPosition += 10;
+                } else {
+                    appData.members.forEach((member, index) => {
+                        doc.text(`${index + 1}. ${member}`, margin + 5, yPosition);
+                        yPosition += 8;
+                    });
+                }
+                yPosition += 10;
+                
+                // Expense Details
+                if (appData.expenses.length > 0) {
+                    checkPageBreak(30);
+                    doc.setFontSize(14);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Expense Details:', margin, yPosition);
+                    yPosition += 15;
+                    
+                    appData.expenses.forEach((expense, index) => {
+                        checkPageBreak(40);
+                        
+                        doc.setFontSize(12);
+                        doc.setFont(undefined, 'bold');
+                        doc.text(`${index + 1}. ${expense.title}`, margin, yPosition);
+                        yPosition += 10;
+                        
+                        doc.setFontSize(10);
+                        doc.setFont(undefined, 'normal');
+                        doc.text(`Amount: Rs ${expense.amount.toFixed(2)}`, margin + 5, yPosition);
+                        yPosition += 8;
+                        doc.text(`Paid by: ${expense.paidBy}`, margin + 5, yPosition);
+                        yPosition += 8;
+                        doc.text(`Shared with: ${expense.sharedWith.join(', ')}`, margin + 5, yPosition);
+                        yPosition += 8;
+                        doc.text(`Per person share: Rs ${(expense.amount / expense.sharedWith.length).toFixed(2)}`, margin + 5, yPosition);
+                        yPosition += 8;
+                        doc.text(`Date: ${new Date(expense.date).toLocaleDateString()}`, margin + 5, yPosition);
+                        yPosition += 15;
+                    });
+                    
+                    // Calculation Breakdown
+                    checkPageBreak(50);
+                    doc.setFontSize(14);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Calculation Breakdown:', margin, yPosition);
+                    yPosition += 15;
+                    
+                    const balances = calculateBalances();
+                    
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Individual Balances:', margin, yPosition);
+                    yPosition += 10;
+                    
+                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'normal');
+                    Object.entries(balances).forEach(([person, balance]) => {
+                        checkPageBreak();
+                        const status = balance > 0.01 ? 'should receive' : balance < -0.01 ? 'owes' : 'settled';
+                        const amount = Math.abs(balance).toFixed(2);
+                        doc.text(`${person}: ${status} Rs ${amount}`, margin + 5, yPosition);
+                        yPosition += 8;
+                    });
+                    yPosition += 10;
+                    
+                    // Settlement Summary
+                    const debts = generateDebts();
+                    if (debts.length > 0) {
+                        checkPageBreak(30);
+                        doc.setFontSize(12);
+                        doc.setFont(undefined, 'bold');
+                        doc.text('Settlement Summary:', margin, yPosition);
+                        yPosition += 10;
+                        
+                        doc.setFontSize(10);
+                        doc.setFont(undefined, 'normal');
+                        debts.forEach(debt => {
+                            checkPageBreak();
+                            doc.text(`${debt.from} -> ${debt.to}: Rs ${debt.amount.toFixed(2)}`, margin + 5, yPosition);
+                            yPosition += 8;
+                        });
+                    } else {
+                        checkPageBreak(20);
+                        doc.setFontSize(12);
+                        doc.setFont(undefined, 'bold');
+                        doc.text('Everyone is settled up!', margin, yPosition);
+                    }
+                    
+                    yPosition += 15;
+                    
+                    // Total Summary
+                    checkPageBreak(30);
+                    const totalExpenses = appData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Summary:', margin, yPosition);
+                    yPosition += 10;
+                    
+                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(`Total expenses: Rs ${totalExpenses.toFixed(2)}`, margin + 5, yPosition);
+                    yPosition += 8;
+                    doc.text(`Number of expenses: ${appData.expenses.length}`, margin + 5, yPosition);
+                    yPosition += 8;
+                    doc.text(`Group size: ${appData.members.length} members`, margin + 5, yPosition);
+                } else {
+                    checkPageBreak(20);
+                    doc.setFontSize(12);
+                    doc.text('No expenses recorded yet.', margin, yPosition);
+                }
+                
+                // Save the PDF
+                const fileName = `splitcalc-report-${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(fileName);
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                alert('Error generating PDF. Please try again or check your browser compatibility.');
+            }
+        }
+        function exportData() {
+            const dataStr = JSON.stringify(appData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `splitcalc-export-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(link.href);
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('This will delete ALL members and expenses. Are you sure?')) {
+                appData = { members: [], expenses: [] };
+                localStorage.removeItem('splitcalc-data');
+                updateUI();
+            }
+        }
+
+        // Show error on input
+        function showError(element, message) {
+            element.classList.add('border-red-500', 'pulse-error');
+            element.focus();
+            
+            // Create or update error message
+            let errorMsg = element.parentNode.querySelector('.error-message');
+            if (!errorMsg) {
+                errorMsg = document.createElement('div');
+                errorMsg.className = 'error-message text-red-500 text-sm mt-1';
+                element.parentNode.appendChild(errorMsg);
+            }
+            errorMsg.textContent = message;
+            
+            // Remove error styling after 3 seconds
+            setTimeout(() => {
+                element.classList.remove('border-red-500', 'pulse-error');
+                if (errorMsg) errorMsg.remove();
+            }, 3000);
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
