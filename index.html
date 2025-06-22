@@ -5,66 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SplitCalc - Split Expenses Easily</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNhh/TCPMZ5/12797iuTWJlrm+a4DCb3Wz6hLqhLCKPgwkmBz2PIjn6g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .pulse-error { animation: pulse 0.5s ease-in-out; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .slide-down { animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { max-height: 0; opacity: 0; } to { max-height: 500px; opacity: 1; } }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto max-w-6xl p-4">
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6 max-w-6xl">
         <!-- Header -->
         <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-blue-600 mb-2">🧾 SplitCalc</h1>
-            <p class="text-gray-600">Split expenses fairly with your group</p>
+            <h1 class="text-4xl font-bold text-indigo-800 mb-2">🧾 SplitCalc</h1>
+            <p class="text-gray-600">Split expenses fairly, calculate instantly, export seamlessly</p>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid lg:grid-cols-2 gap-6">
             <!-- Left Column -->
             <div class="space-y-6">
-                <!-- Members Panel -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800">👥 Group Members</h2>
+                <!-- Members Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">👥 Members</h2>
                     <div class="flex gap-2 mb-4">
                         <input type="text" id="memberInput" placeholder="Enter member name" 
-                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <button onclick="addMember()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                               class="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <button onclick="addMember()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
                             Add
                         </button>
                     </div>
                     <div id="membersList" class="space-y-2"></div>
                 </div>
 
-                <!-- Add Expense Panel -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800">➕ Add Expense</h2>
-                    <form onsubmit="addExpense(event)" class="space-y-4">
+                <!-- Add Expense Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">➕ Add Expense</h2>
+                    <form id="expenseForm" class="space-y-4">
                         <input type="text" id="expenseTitle" placeholder="Expense title (e.g., Dinner)" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                         
-                        <input type="number" id="expenseAmount" placeholder="Amount" step="0.01" min="0" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="number" id="expenseAmount" placeholder="Amount" step="0.01" required
+                               class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                         
                         <select id="expensePaidBy" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                             <option value="">Who paid?</option>
                         </select>
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Shared with:</label>
-                            <div class="mb-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="selectAllShared" onchange="toggleSelectAll()" 
-                                           class="mr-2 text-blue-500 focus:ring-blue-500">
-                                    <span class="text-sm font-medium text-blue-600">Select All</span>
-                                </label>
+                            <div class="flex gap-2 mb-2">
+                                <button type="button" onclick="selectAllMembers()" 
+                                        class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors">
+                                    Select All
+                                </button>
+                                <button type="button" onclick="deselectAllMembers()" 
+                                        class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition-colors">
+                                    Deselect All
+                                </button>
                             </div>
-                            <div id="sharedWithList" class="space-y-2 max-h-32 overflow-y-auto border-t pt-2"></div>
+                            <div id="sharedWithCheckboxes" class="space-y-1"></div>
                         </div>
                         
-                        <button type="submit" class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors font-semibold">
                             Add Expense
                         </button>
                     </form>
@@ -73,39 +75,58 @@
 
             <!-- Right Column -->
             <div class="space-y-6">
-                <!-- Balance Panel -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800">📊 Who Owes What</h2>
+                <!-- Balances Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-800">💰 Current Balances</h2>
+                        <div class="flex gap-2">
+                            <button onclick="startNewCalculation()" 
+                                    class="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors">
+                                New Calculation
+                            </button>
+                            <button onclick="toggleCalculations()" id="calcToggle"
+                                    class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors">
+                                Show Calculations
+                            </button>
+                        </div>
+                    </div>
                     <div id="balancesList" class="space-y-2"></div>
+                    <div id="calculationsSection" class="mt-4 p-4 bg-gray-50 rounded-lg hidden slide-down">
+                        <h3 class="font-semibold text-gray-700 mb-3">📊 Complete Calculation Breakdown:</h3>
+                        <div id="calculationsDetails" class="text-sm text-gray-600 space-y-2"></div>
+                    </div>
                 </div>
 
-                <!-- Expense History -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800">📜 Expense History</h2>
-                    <div id="expenseHistory" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                <!-- History Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-800">📜 Expense History</h2>
+                        <button onclick="clearAllHistory()" 
+                                class="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors">
+                            Clear All
+                        </button>
+                    </div>
+                    <div id="expenseHistory" class="space-y-2 max-h-60 overflow-y-auto"></div>
                 </div>
 
-                <!-- Export & Actions -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800">💾 Export & Import</h2>
-                    <div class="space-y-3">
-                        <button onclick="exportData()" class="w-full px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors">
-                            📥 Export as JSON
+                <!-- Calculation History -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">🔄 Calculation History</h2>
+                    <div id="calculationHistory" class="space-y-3"></div>
+                </div>
+
+                <!-- Export/Import Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">📥📤 Data Management</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="exportData()" 
+                                class="bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            📥 Export JSON
                         </button>
-                        <button onclick="exportPDF()" class="w-full px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors">
-                            📄 Export as PDF
-                        </button>
-                        <div class="border-t pt-3">
+                        <label class="bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-center">
+                            📤 Import JSON
                             <input type="file" id="importFile" accept=".json" onchange="importData()" class="hidden">
-                            <button onclick="document.getElementById('importFile').click()" class="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
-                                📂 Import JSON
-                            </button>
-                        </div>
-                        <div class="border-t pt-3">
-                            <button onclick="clearAllData()" class="w-full px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">
-                                🗑️ Clear All Data
-                            </button>
-                        </div>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -113,203 +134,160 @@
     </div>
 
     <script>
-        // Global app state
-        let appData = {
+        // Global state
+        let appState = {
             members: [],
-            expenses: []
+            expenses: [],
+            calculationHistory: [],
+            currentCalculationId: Date.now()
         };
 
+        let showCalculations = false;
+
         // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
+        function init() {
+            loadFromStorage();
             updateUI();
-            
-            // Add enter key support for member input
-            document.getElementById('memberInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    addMember();
-                }
-            });
-        });
+        }
 
-        // Load data from localStorage
-        function loadData() {
-            const saved = localStorage.getItem('splitcalc-data');
-            if (saved) {
-                try {
-                    appData = JSON.parse(saved);
-                    // Ensure arrays exist
-                    if (!appData.members) appData.members = [];
-                    if (!appData.expenses) appData.expenses = [];
-                } catch (e) {
-                    console.error('Error loading data:', e);
-                    appData = { members: [], expenses: [] };
-                }
+        // Storage functions
+        function saveToStorage() {
+            localStorage.setItem('splitcalc_data', JSON.stringify(appState));
+        }
+
+        function loadFromStorage() {
+            const stored = localStorage.getItem('splitcalc_data');
+            if (stored) {
+                appState = JSON.parse(stored);
             }
         }
 
-        // Save data to localStorage
-        function saveData() {
-            localStorage.setItem('splitcalc-data', JSON.stringify(appData));
-        }
-
-        // Toggle select all shared members
-        function toggleSelectAll() {
-            const selectAllCheckbox = document.getElementById('selectAllShared');
-            const memberCheckboxes = document.querySelectorAll('#sharedWithList input[type="checkbox"]');
-            
-            memberCheckboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
-            });
-        }
-
-        // Update select all checkbox state based on individual selections
-        function updateSelectAllState() {
-            const selectAllCheckbox = document.getElementById('selectAllShared');
-            const memberCheckboxes = document.querySelectorAll('#sharedWithList input[type="checkbox"]');
-            const checkedBoxes = document.querySelectorAll('#sharedWithList input[type="checkbox"]:checked');
-            
-            if (memberCheckboxes.length === 0) {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
-            } else if (checkedBoxes.length === memberCheckboxes.length) {
-                selectAllCheckbox.checked = true;
-                selectAllCheckbox.indeterminate = false;
-            } else if (checkedBoxes.length > 0) {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = true;
-            } else {
-                selectAllCheckbox.checked = false;
-                selectAllCheckbox.indeterminate = false;
-            }
-        }
+        // Member management
         function addMember() {
             const input = document.getElementById('memberInput');
             const name = input.value.trim();
             
-            if (!name) {
-                showError(input, 'Please enter a name');
-                return;
-            }
-            
-            if (appData.members.includes(name)) {
-                showError(input, 'Member already exists');
-                return;
-            }
-            
-            appData.members.push(name);
-            input.value = '';
-            saveData();
-            updateUI();
-        }
-
-        // Remove a member
-        function removeMember(name) {
-            if (confirm(`Remove ${name} from the group? This will also remove their expenses.`)) {
-                appData.members = appData.members.filter(m => m !== name);
-                appData.expenses = appData.expenses.filter(e => e.paidBy !== name && !e.sharedWith.includes(name));
-                saveData();
+            if (name && !appState.members.includes(name)) {
+                appState.members.push(name);
+                input.value = '';
                 updateUI();
+                saveToStorage();
             }
         }
 
-        // Add a new expense
+        function removeMember(name) {
+            appState.members = appState.members.filter(m => m !== name);
+            appState.expenses = appState.expenses.filter(e => e.paidBy !== name && !e.sharedWith.includes(name));
+            updateUI();
+            saveToStorage();
+        }
+
+        // Expense management
         function addExpense(event) {
             event.preventDefault();
             
             const title = document.getElementById('expenseTitle').value.trim();
             const amount = parseFloat(document.getElementById('expenseAmount').value);
             const paidBy = document.getElementById('expensePaidBy').value;
+            const sharedWith = Array.from(document.querySelectorAll('input[name="sharedWith"]:checked')).map(cb => cb.value);
             
-            // Get selected shared members
-            const sharedCheckboxes = document.querySelectorAll('#sharedWithList input[type="checkbox"]:checked');
-            const sharedWith = Array.from(sharedCheckboxes).map(cb => cb.value);
-            
-            // Validation
-            if (!title) {
-                showError(document.getElementById('expenseTitle'), 'Please enter a title');
-                return;
-            }
-            
-            if (isNaN(amount) || amount <= 0) {
-                showError(document.getElementById('expenseAmount'), 'Please enter a valid amount');
-                return;
-            }
-            
-            if (!paidBy) {
-                showError(document.getElementById('expensePaidBy'), 'Please select who paid');
-                return;
-            }
-            
-            if (sharedWith.length === 0) {
-                alert('Please select who shared this expense');
-                return;
-            }
-            
-            // Create expense object
-            const expense = {
-                id: Date.now(),
-                title: title,
-                amount: amount,
-                paidBy: paidBy,
-                sharedWith: sharedWith,
-                date: new Date().toISOString()
-            };
-            
-            appData.expenses.push(expense);
-            
-            // Clear form
-            document.getElementById('expenseTitle').value = '';
-            document.getElementById('expenseAmount').value = '';
-            document.getElementById('expensePaidBy').value = '';
-            document.querySelectorAll('#sharedWithList input[type="checkbox"]').forEach(cb => cb.checked = false);
-            document.getElementById('selectAllShared').checked = false;
-            document.getElementById('selectAllShared').indeterminate = false;
-            
-            saveData();
-            updateUI();
-        }
-
-        // Remove an expense
-        function removeExpense(id) {
-            if (confirm('Remove this expense?')) {
-                appData.expenses = appData.expenses.filter(e => e.id !== id);
-                saveData();
+            if (title && amount > 0 && paidBy && sharedWith.length > 0) {
+                const expense = {
+                    id: Date.now(),
+                    title,
+                    amount,
+                    paidBy,
+                    sharedWith,
+                    date: new Date().toISOString()
+                };
+                
+                appState.expenses.push(expense);
+                document.getElementById('expenseForm').reset();
+                
+                // Save calculation to history
+                saveCalculationToHistory();
+                
                 updateUI();
+                saveToStorage();
             }
         }
 
-        // Calculate balances
+        function removeExpense(expenseId) {
+            appState.expenses = appState.expenses.filter(e => e.id !== expenseId);
+            saveCalculationToHistory();
+            updateUI();
+            saveToStorage();
+        }
+
+        // Calculation functions
         function calculateBalances() {
             const balances = {};
+            const detailedCalculations = [];
             
             // Initialize balances
-            appData.members.forEach(member => {
+            appState.members.forEach(member => {
                 balances[member] = 0;
             });
             
+            if (appState.expenses.length === 0) {
+                return { balances, detailedCalculations };
+            }
+            
+            detailedCalculations.push("=== EXPENSE BREAKDOWN ===");
+            
             // Process each expense
-            appData.expenses.forEach(expense => {
-                const shareAmount = expense.amount / expense.sharedWith.length;
+            appState.expenses.forEach((expense, index) => {
+                const share = expense.amount / expense.sharedWith.length;
                 
-                // Person who paid gets credit
+                detailedCalculations.push(`\n${index + 1}. ${expense.title}:`);
+                detailedCalculations.push(`   Total Amount: ₹${expense.amount}`);
+                detailedCalculations.push(`   Paid by: ${expense.paidBy}`);
+                detailedCalculations.push(`   Shared among: ${expense.sharedWith.join(', ')} (${expense.sharedWith.length} people)`);
+                detailedCalculations.push(`   Per person share: ₹${expense.amount} ÷ ${expense.sharedWith.length} = ₹${share.toFixed(2)}`);
+                
+                // Payer gets credit for the full amount
                 balances[expense.paidBy] += expense.amount;
+                detailedCalculations.push(`   → ${expense.paidBy} gets credit: +₹${expense.amount}`);
                 
-                // Everyone who shared owes their share
+                // Everyone who shared pays their share
                 expense.sharedWith.forEach(person => {
-                    balances[person] -= shareAmount;
+                    balances[person] -= share;
+                    detailedCalculations.push(`   → ${person} owes their share: -₹${share.toFixed(2)}`);
                 });
             });
             
-            return balances;
+            // Show running balances
+            detailedCalculations.push("\n=== RUNNING BALANCES ===");
+            Object.entries(balances).forEach(([person, balance]) => {
+                if (Math.abs(balance) > 0.01) {
+                    const status = balance > 0 ? `should receive ₹${balance.toFixed(2)}` : `owes ₹${Math.abs(balance).toFixed(2)}`;
+                    detailedCalculations.push(`${person}: ${status}`);
+                } else {
+                    detailedCalculations.push(`${person}: All settled (₹0.00)`);
+                }
+            });
+            
+            // Show final settlements
+            const settlements = getSettlements(balances);
+            if (settlements.length > 0) {
+                detailedCalculations.push("\n=== FINAL SETTLEMENTS ===");
+                settlements.forEach(settlement => {
+                    detailedCalculations.push(`${settlement.from} pays ${settlement.to}: ₹${settlement.amount.toFixed(2)}`);
+                });
+                
+                // Show verification
+                detailedCalculations.push("\n=== VERIFICATION ===");
+                detailedCalculations.push("After settlements, everyone's balance will be ₹0.00");
+            } else {
+                detailedCalculations.push("\n=== FINAL RESULT ===");
+                detailedCalculations.push("Everyone is already settled! No payments needed.");
+            }
+            
+            return { balances, detailedCalculations };
         }
 
-        // Generate who owes whom
-        function generateDebts() {
-            const balances = calculateBalances();
-            const debts = [];
-            
-            // Separate creditors and debtors
+        function getSettlements(balances) {
+            const settlements = [];
             const creditors = [];
             const debtors = [];
             
@@ -317,389 +295,424 @@
                 if (balance > 0.01) {
                     creditors.push({ person, amount: balance });
                 } else if (balance < -0.01) {
-                    debtors.push({ person, amount: Math.abs(balance) });
+                    debtors.push({ person, amount: -balance });
                 }
             });
             
-            // Sort by amount (largest first)
-            creditors.sort((a, b) => b.amount - a.amount);
-            debtors.sort((a, b) => b.amount - a.amount);
+            // Simple settlement algorithm
+            creditors.forEach(creditor => {
+                debtors.forEach(debtor => {
+                    if (creditor.amount > 0.01 && debtor.amount > 0.01) {
+                        const settlement = Math.min(creditor.amount, debtor.amount);
+                        settlements.push({
+                            from: debtor.person,
+                            to: creditor.person,
+                            amount: settlement
+                        });
+                        creditor.amount -= settlement;
+                        debtor.amount -= settlement;
+                    }
+                });
+            });
             
-            // Match debts
-            let i = 0, j = 0;
-            while (i < creditors.length && j < debtors.length) {
-                const creditor = creditors[i];
-                const debtor = debtors[j];
-                
-                const amount = Math.min(creditor.amount, debtor.amount);
-                
-                if (amount > 0.01) {
-                    debts.push({
-                        from: debtor.person,
-                        to: creditor.person,
-                        amount: amount
-                    });
-                }
-                
-                creditor.amount -= amount;
-                debtor.amount -= amount;
-                
-                if (creditor.amount < 0.01) i++;
-                if (debtor.amount < 0.01) j++;
-            }
-            
-            return debts;
+            return settlements;
         }
 
-        // Update entire UI
+        // History management
+        function saveCalculationToHistory() {
+            if (appState.expenses.length === 0) return;
+            
+            const timestamp = new Date().toLocaleString();
+            const { balances } = calculateBalances();
+            const settlements = getSettlements(balances);
+            
+            // Calculate total expenses for this calculation
+            const totalExpenses = appState.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            
+            const calculation = {
+                id: appState.currentCalculationId,
+                timestamp,
+                members: [...appState.members],
+                expenses: [...appState.expenses],
+                totalAmount: totalExpenses,
+                settlements: [...settlements],
+                expenseCount: appState.expenses.length
+            };
+            
+            // Remove existing calculation with same ID (update scenario)
+            appState.calculationHistory = appState.calculationHistory.filter(c => c.id !== appState.currentCalculationId);
+            
+            appState.calculationHistory.unshift(calculation);
+            
+            // Keep only last 3 calculations
+            if (appState.calculationHistory.length > 3) {
+                appState.calculationHistory = appState.calculationHistory.slice(0, 3);
+            }
+        }
+
+        function startNewCalculation() {
+            if (appState.expenses.length > 0 || appState.members.length > 0) {
+                if (confirm('Start a completely new calculation? Current members and expenses will be saved to history and cleared.')) {
+                    // Save current state to history if there are expenses
+                    if (appState.expenses.length > 0) {
+                        saveCalculationToHistory();
+                    }
+                    
+                    // Reset everything
+                    appState.members = [];
+                    appState.expenses = [];
+                    appState.currentCalculationId = Date.now();
+                    
+                    updateUI();
+                    saveToStorage();
+                    
+                    alert('New calculation started! Previous data saved to history.');
+                }
+            } else {
+                alert('Already starting fresh! Add some members and expenses.');
+            }
+        }
+
+        function restoreCalculation(calcId) {
+            const calc = appState.calculationHistory.find(c => c.id === calcId);
+            if (!calc) return;
+            
+            if (confirm('Restore this calculation? Current data will be replaced.')) {
+                // Save current state if there's data
+                if (appState.expenses.length > 0) {
+                    saveCalculationToHistory();
+                }
+                
+                // Restore the selected calculation
+                appState.members = [...calc.members];
+                appState.expenses = [...calc.expenses];
+                appState.currentCalculationId = calc.id;
+                
+                updateUI();
+                saveToStorage();
+                
+                alert('Calculation restored successfully!');
+            }
+        }
+
+        function downloadCalculation(calcId) {
+            const calc = appState.calculationHistory.find(c => c.id === calcId);
+            if (!calc) return;
+            
+            const exportData = {
+                timestamp: calc.timestamp,
+                members: calc.members,
+                expenses: calc.expenses,
+                settlements: calc.settlements,
+                totalAmount: calc.totalAmount,
+                summary: {
+                    expenseCount: calc.expenseCount,
+                    memberCount: calc.members.length,
+                    totalAmount: calc.totalAmount
+                }
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Create filename from timestamp
+            const dateStr = new Date(calc.timestamp).toISOString().split('T')[0];
+            const timeStr = new Date(calc.timestamp).toTimeString().split(' ')[0].replace(/:/g, '-');
+            link.download = `splitcalc_calculation_${dateStr}_${timeStr}.json`;
+            
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function removeCalculationFromHistory(calcId) {
+            appState.calculationHistory = appState.calculationHistory.filter(c => c.id !== calcId);
+            updateUI();
+            saveToStorage();
+        }
+
+        function clearAllHistory() {
+            if (confirm('Are you sure you want to clear all history?')) {
+                appState.calculationHistory = [];
+                updateUI();
+                saveToStorage();
+            }
+        }
+
+        // UI functions
+        function selectAllMembers() {
+            document.querySelectorAll('input[name="sharedWith"]').forEach(cb => cb.checked = true);
+        }
+
+        function deselectAllMembers() {
+            document.querySelectorAll('input[name="sharedWith"]').forEach(cb => cb.checked = false);
+        }
+
+        function toggleCalculations() {
+            showCalculations = !showCalculations;
+            const section = document.getElementById('calculationsSection');
+            const button = document.getElementById('calcToggle');
+            
+            if (showCalculations) {
+                section.classList.remove('hidden');
+                button.textContent = 'Hide Calculations';
+            } else {
+                section.classList.add('hidden');
+                button.textContent = 'Show Calculations';
+            }
+        }
+
+        // Export/Import functions
+        function exportData() {
+            const dataStr = JSON.stringify(appState, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `splitcalc_export_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData() {
+            const file = document.getElementById('importFile').files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    // Check if it's a full app export or individual calculation
+                    if (importedData.members && importedData.expenses && importedData.calculationHistory !== undefined) {
+                        // Full app export
+                        if (confirm('This will replace ALL current data with imported data. Continue?')) {
+                            appState = importedData;
+                            if (!appState.currentCalculationId) {
+                                appState.currentCalculationId = Date.now();
+                            }
+                            updateUI();
+                            saveToStorage();
+                            alert('Full app data imported successfully!');
+                        }
+                    } else if (importedData.members && importedData.expenses) {
+                        // Individual calculation import
+                        if (confirm('Import this calculation? Current data will be replaced.')) {
+                            // Save current state if there's data
+                            if (appState.expenses.length > 0) {
+                                saveCalculationToHistory();
+                            }
+                            
+                            appState.members = importedData.members || [];
+                            appState.expenses = importedData.expenses || [];
+                            appState.currentCalculationId = Date.now();
+                            
+                            updateUI();
+                            saveToStorage();
+                            alert('Individual calculation imported successfully!');
+                        }
+                    } else {
+                        alert('Invalid file format! Please import a valid SplitCalc JSON file.');
+                    }
+                } catch (error) {
+                    alert('Error reading file! Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Main UI update function
         function updateUI() {
             updateMembersList();
             updateExpenseForm();
-            updateExpenseHistory();
             updateBalances();
+            updateExpenseHistory();
+            updateCalculationHistory();
         }
 
-        // Update members list
         function updateMembersList() {
             const container = document.getElementById('membersList');
             container.innerHTML = '';
             
-            if (appData.members.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">No members added yet</p>';
-                return;
-            }
-            
-            appData.members.forEach(member => {
+            appState.members.forEach(member => {
                 const div = document.createElement('div');
-                div.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-md fade-in';
+                div.className = 'flex justify-between items-center p-2 bg-gray-50 rounded fade-in';
                 div.innerHTML = `
-                    <span class="font-medium">${escapeHtml(member)}</span>
-                    <button onclick="removeMember('${escapeHtml(member)}')" 
-                            class="text-red-500 hover:text-red-700 text-sm">Remove</button>
+                    <span class="font-medium">${member}</span>
+                    <button onclick="removeMember('${member}')" class="text-red-600 hover:text-red-800">×</button>
                 `;
                 container.appendChild(div);
             });
         }
 
-        // Update expense form dropdowns
         function updateExpenseForm() {
             const paidBySelect = document.getElementById('expensePaidBy');
-            const sharedWithContainer = document.getElementById('sharedWithList');
+            const sharedWithContainer = document.getElementById('sharedWithCheckboxes');
             
-            // Update "paid by" dropdown
+            // Update paid by dropdown
             paidBySelect.innerHTML = '<option value="">Who paid?</option>';
-            appData.members.forEach(member => {
-                const option = document.createElement('option');
-                option.value = member;
-                option.textContent = member;
-                paidBySelect.appendChild(option);
+            appState.members.forEach(member => {
+                paidBySelect.innerHTML += `<option value="${member}">${member}</option>`;
             });
             
-            // Update "shared with" checkboxes
+            // Update shared with checkboxes
             sharedWithContainer.innerHTML = '';
-            if (appData.members.length === 0) {
-                sharedWithContainer.innerHTML = '<p class="text-gray-500 text-sm">Add members first</p>';
-            } else {
-                appData.members.forEach(member => {
-                    const div = document.createElement('div');
-                    div.className = 'flex items-center';
-                    div.innerHTML = `
-                        <input type="checkbox" id="shared-${escapeHtml(member)}" value="${escapeHtml(member)}" 
-                               onchange="updateSelectAllState()"
-                               class="mr-2 text-blue-500 focus:ring-blue-500">
-                        <label for="shared-${escapeHtml(member)}" class="text-sm">${escapeHtml(member)}</label>
-                    `;
-                    sharedWithContainer.appendChild(div);
-                });
-                updateSelectAllState();
-            }
+            appState.members.forEach(member => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center';
+                div.innerHTML = `
+                    <input type="checkbox" name="sharedWith" value="${member}" id="share_${member}" class="mr-2">
+                    <label for="share_${member}" class="text-sm">${member}</label>
+                `;
+                sharedWithContainer.appendChild(div);
+            });
         }
 
-        // Update expense history
+        function updateBalances() {
+            const { balances, detailedCalculations } = calculateBalances();
+            const settlements = getSettlements(balances);
+            
+            const balancesContainer = document.getElementById('balancesList');
+            const calculationsContainer = document.getElementById('calculationsDetails');
+            
+            balancesContainer.innerHTML = '';
+            
+            if (appState.expenses.length === 0) {
+                balancesContainer.innerHTML = '<p class="text-gray-500 text-center">Add expenses to see balances</p>';
+                calculationsContainer.innerHTML = '<p class="text-gray-500">No calculations yet</p>';
+                return;
+            }
+            
+            if (settlements.length === 0) {
+                balancesContainer.innerHTML = '<div class="p-3 bg-green-50 border border-green-200 rounded-lg text-center"><span class="text-green-700 font-medium">🎉 Everyone is settled! No payments needed.</span></div>';
+            } else {
+                settlements.forEach(settlement => {
+                    const div = document.createElement('div');
+                    div.className = 'p-3 bg-yellow-50 border border-yellow-200 rounded-lg fade-in';
+                    div.innerHTML = `
+                        <span class="font-medium">${settlement.from}</span> owes 
+                        <span class="font-medium">${settlement.to}</span> 
+                        <span class="font-bold text-green-600">₹${settlement.amount.toFixed(2)}</span>
+                    `;
+                    balancesContainer.appendChild(div);
+                });
+            }
+            
+            // Update detailed calculations
+            calculationsContainer.innerHTML = detailedCalculations.map(calc => {
+                if (calc.startsWith('===')) {
+                    return `<div class="font-bold text-indigo-700 mt-3 mb-1">${calc}</div>`;
+                } else if (calc.startsWith('\n')) {
+                    return `<div class="font-semibold text-gray-800 mt-2">${calc.substring(1)}</div>`;
+                } else if (calc.includes('→')) {
+                    return `<div class="ml-4 text-blue-600">${calc}</div>`;
+                } else {
+                    return `<div class="ml-2">${calc}</div>`;
+                }
+            }).join('');
+        }
+
         function updateExpenseHistory() {
             const container = document.getElementById('expenseHistory');
             container.innerHTML = '';
             
-            if (appData.expenses.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">No expenses recorded yet</p>';
+            if (appState.expenses.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No expenses yet</p>';
                 return;
             }
             
-            // Sort expenses by date (newest first)
-            const sortedExpenses = [...appData.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            sortedExpenses.forEach(expense => {
+            appState.expenses.slice().reverse().forEach(expense => {
                 const div = document.createElement('div');
-                div.className = 'border border-gray-200 rounded-md p-3 fade-in';
-                
-                const date = new Date(expense.date).toLocaleDateString();
-                const shareAmount = (expense.amount / expense.sharedWith.length).toFixed(2);
-                
+                div.className = 'p-3 bg-gray-50 rounded-lg fade-in';
                 div.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-medium text-gray-800">${escapeHtml(expense.title)}</h3>
-                        <button onclick="removeExpense(${expense.id})" 
-                                class="text-red-500 hover:text-red-700 text-xs">×</button>
-                    </div>
-                    <div class="text-sm text-gray-600 space-y-1">
-                        <div>Amount: <span class="font-medium">₹${expense.amount.toFixed(2)}</span></div>
-                        <div>Paid by: <span class="font-medium">${escapeHtml(expense.paidBy)}</span></div>
-                        <div>Shared with: ${expense.sharedWith.map(p => escapeHtml(p)).join(', ')}</div>
-                        <div>Per person: ₹${shareAmount}</div>
-                        <div class="text-xs text-gray-400">${date}</div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="font-medium">${expense.title}</div>
+                            <div class="text-sm text-gray-600">₹${expense.amount} paid by ${expense.paidBy}</div>
+                            <div class="text-xs text-gray-500">Shared with: ${expense.sharedWith.join(', ')}</div>
+                        </div>
+                        <button onclick="removeExpense(${expense.id})" class="text-red-600 hover:text-red-800">×</button>
                     </div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        // Update balances display
-        function updateBalances() {
-            const container = document.getElementById('balancesList');
+        function updateCalculationHistory() {
+            const container = document.getElementById('calculationHistory');
             container.innerHTML = '';
             
-            if (appData.expenses.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">Add expenses to see balances</p>';
+            if (appState.calculationHistory.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">No calculation history</p>';
                 return;
             }
             
-            const debts = generateDebts();
-            
-            if (debts.length === 0) {
-                container.innerHTML = '<p class="text-green-600 text-center py-4 font-medium">✅ Everyone is settled up!</p>';
-                return;
-            }
-            
-            debts.forEach(debt => {
+            appState.calculationHistory.forEach(calc => {
                 const div = document.createElement('div');
-                div.className = 'flex justify-between items-center p-3 bg-yellow-50 border border-yellow-200 rounded-md fade-in';
+                div.className = 'p-4 bg-blue-50 border border-blue-200 rounded-lg fade-in';
+                
+                const settlementsHtml = calc.settlements.length === 0 
+                    ? '<div class="text-green-600 font-medium">✅ All settled!</div>' 
+                    : calc.settlements.map(s => 
+                        `<div class="text-sm">${s.from} → ${s.to}: <span class="font-medium text-green-600">₹${s.amount.toFixed(2)}</span></div>`
+                      ).join('');
+                
                 div.innerHTML = `
-                    <span><strong>${escapeHtml(debt.from)}</strong> owes <strong>${escapeHtml(debt.to)}</strong></span>
-                    <span class="font-bold text-green-600">₹${debt.amount.toFixed(2)}</span>
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-indigo-800">${calc.timestamp}</div>
+                            <div class="text-xs text-gray-600 mt-1">
+                                ${calc.expenseCount} expenses • ${calc.members.length} members • Total: ₹${calc.totalAmount.toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="flex gap-1 ml-2">
+                            <button onclick="restoreCalculation(${calc.id})" 
+                                    class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition-colors"
+                                    title="Restore this calculation">
+                                📂
+                            </button>
+                            <button onclick="downloadCalculation(${calc.id})" 
+                                    class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition-colors"
+                                    title="Download this calculation">
+                                💾
+                            </button>
+                            <button onclick="removeCalculationFromHistory(${calc.id})" 
+                                    class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 transition-colors"
+                                    title="Delete this calculation">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <div class="text-xs font-semibold text-gray-700 mb-1">Members: ${calc.members.join(', ')}</div>
+                        <div class="text-xs text-gray-600 mb-2">
+                            Expenses: ${calc.expenses.map(e => `${e.title} (₹${e.amount})`).join(' • ')}
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-2">
+                        <div class="text-xs font-semibold text-gray-700 mb-1">Final Settlements:</div>
+                        ${settlementsHtml}
+                    </div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        // Export data as PDF with detailed calculations
-        function exportPDF() {
-            // Check if jsPDF is loaded
-            if (typeof window.jsPDF === 'undefined') {
-                // Try alternative access method
-                const jsPDF = window.jspdf?.jsPDF;
-                if (!jsPDF) {
-                    alert('PDF export library is loading. Please wait a moment and try again.');
-                    return;
-                }
-                window.jsPDF = jsPDF;
+        // Event listeners
+        document.getElementById('memberInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addMember();
             }
+        });
 
-            try {
-                const { jsPDF } = window.jsPDF;
-                const doc = new jsPDF();
-                
-                let yPosition = 20;
-                const pageHeight = doc.internal.pageSize.height;
-                const margin = 20;
-                
-                // Helper function to add new page if needed
-                function checkPageBreak(neededSpace = 20) {
-                    if (yPosition + neededSpace > pageHeight - margin) {
-                        doc.addPage();
-                        yPosition = 20;
-                    }
-                }
-                
-                // Title
-                doc.setFontSize(20);
-                doc.setFont(undefined, 'bold');
-                doc.text('SplitCalc - Expense Report', margin, yPosition);
-                yPosition += 15;
-                
-                // Date
-                doc.setFontSize(10);
-                doc.setFont(undefined, 'normal');
-                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, margin, yPosition);
-                yPosition += 20;
-                
-                // Group Members
-                checkPageBreak(30);
-                doc.setFontSize(14);
-                doc.setFont(undefined, 'bold');
-                doc.text('Group Members:', margin, yPosition);
-                yPosition += 10;
-                
-                doc.setFontSize(10);
-                doc.setFont(undefined, 'normal');
-                if (appData.members.length === 0) {
-                    doc.text('No members added', margin + 5, yPosition);
-                    yPosition += 10;
-                } else {
-                    appData.members.forEach((member, index) => {
-                        doc.text(`${index + 1}. ${member}`, margin + 5, yPosition);
-                        yPosition += 8;
-                    });
-                }
-                yPosition += 10;
-                
-                // Expense Details
-                if (appData.expenses.length > 0) {
-                    checkPageBreak(30);
-                    doc.setFontSize(14);
-                    doc.setFont(undefined, 'bold');
-                    doc.text('Expense Details:', margin, yPosition);
-                    yPosition += 15;
-                    
-                    appData.expenses.forEach((expense, index) => {
-                        checkPageBreak(40);
-                        
-                        doc.setFontSize(12);
-                        doc.setFont(undefined, 'bold');
-                        doc.text(`${index + 1}. ${expense.title}`, margin, yPosition);
-                        yPosition += 10;
-                        
-                        doc.setFontSize(10);
-                        doc.setFont(undefined, 'normal');
-                        doc.text(`Amount: Rs ${expense.amount.toFixed(2)}`, margin + 5, yPosition);
-                        yPosition += 8;
-                        doc.text(`Paid by: ${expense.paidBy}`, margin + 5, yPosition);
-                        yPosition += 8;
-                        doc.text(`Shared with: ${expense.sharedWith.join(', ')}`, margin + 5, yPosition);
-                        yPosition += 8;
-                        doc.text(`Per person share: Rs ${(expense.amount / expense.sharedWith.length).toFixed(2)}`, margin + 5, yPosition);
-                        yPosition += 8;
-                        doc.text(`Date: ${new Date(expense.date).toLocaleDateString()}`, margin + 5, yPosition);
-                        yPosition += 15;
-                    });
-                    
-                    // Calculation Breakdown
-                    checkPageBreak(50);
-                    doc.setFontSize(14);
-                    doc.setFont(undefined, 'bold');
-                    doc.text('Calculation Breakdown:', margin, yPosition);
-                    yPosition += 15;
-                    
-                    const balances = calculateBalances();
-                    
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.text('Individual Balances:', margin, yPosition);
-                    yPosition += 10;
-                    
-                    doc.setFontSize(10);
-                    doc.setFont(undefined, 'normal');
-                    Object.entries(balances).forEach(([person, balance]) => {
-                        checkPageBreak();
-                        const status = balance > 0.01 ? 'should receive' : balance < -0.01 ? 'owes' : 'settled';
-                        const amount = Math.abs(balance).toFixed(2);
-                        doc.text(`${person}: ${status} Rs ${amount}`, margin + 5, yPosition);
-                        yPosition += 8;
-                    });
-                    yPosition += 10;
-                    
-                    // Settlement Summary
-                    const debts = generateDebts();
-                    if (debts.length > 0) {
-                        checkPageBreak(30);
-                        doc.setFontSize(12);
-                        doc.setFont(undefined, 'bold');
-                        doc.text('Settlement Summary:', margin, yPosition);
-                        yPosition += 10;
-                        
-                        doc.setFontSize(10);
-                        doc.setFont(undefined, 'normal');
-                        debts.forEach(debt => {
-                            checkPageBreak();
-                            doc.text(`${debt.from} -> ${debt.to}: Rs ${debt.amount.toFixed(2)}`, margin + 5, yPosition);
-                            yPosition += 8;
-                        });
-                    } else {
-                        checkPageBreak(20);
-                        doc.setFontSize(12);
-                        doc.setFont(undefined, 'bold');
-                        doc.text('Everyone is settled up!', margin, yPosition);
-                    }
-                    
-                    yPosition += 15;
-                    
-                    // Total Summary
-                    checkPageBreak(30);
-                    const totalExpenses = appData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.text('Summary:', margin, yPosition);
-                    yPosition += 10;
-                    
-                    doc.setFontSize(10);
-                    doc.setFont(undefined, 'normal');
-                    doc.text(`Total expenses: Rs ${totalExpenses.toFixed(2)}`, margin + 5, yPosition);
-                    yPosition += 8;
-                    doc.text(`Number of expenses: ${appData.expenses.length}`, margin + 5, yPosition);
-                    yPosition += 8;
-                    doc.text(`Group size: ${appData.members.length} members`, margin + 5, yPosition);
-                } else {
-                    checkPageBreak(20);
-                    doc.setFontSize(12);
-                    doc.text('No expenses recorded yet.', margin, yPosition);
-                }
-                
-                // Save the PDF
-                const fileName = `splitcalc-report-${new Date().toISOString().split('T')[0]}.pdf`;
-                doc.save(fileName);
-                
-            } catch (error) {
-                console.error('PDF generation error:', error);
-                alert('Error generating PDF. Please try again or check your browser compatibility.');
-            }
-        }
-        function exportData() {
-            const dataStr = JSON.stringify(appData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `splitcalc-export-${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-            
-            URL.revokeObjectURL(link.href);
-        }
+        document.getElementById('expenseForm').addEventListener('submit', addExpense);
 
-        // Clear all data
-        function clearAllData() {
-            if (confirm('This will delete ALL members and expenses. Are you sure?')) {
-                appData = { members: [], expenses: [] };
-                localStorage.removeItem('splitcalc-data');
-                updateUI();
-            }
-        }
-
-        // Show error on input
-        function showError(element, message) {
-            element.classList.add('border-red-500', 'pulse-error');
-            element.focus();
-            
-            // Create or update error message
-            let errorMsg = element.parentNode.querySelector('.error-message');
-            if (!errorMsg) {
-                errorMsg = document.createElement('div');
-                errorMsg.className = 'error-message text-red-500 text-sm mt-1';
-                element.parentNode.appendChild(errorMsg);
-            }
-            errorMsg.textContent = message;
-            
-            // Remove error styling after 3 seconds
-            setTimeout(() => {
-                element.classList.remove('border-red-500', 'pulse-error');
-                if (errorMsg) errorMsg.remove();
-            }, 3000);
-        }
-
-        // Escape HTML to prevent XSS
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+        // Initialize app
+        init();
     </script>
 </body>
 </html>
